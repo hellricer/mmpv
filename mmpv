@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# default options can be overriden by environment variables
+: "${MMPV_PIDFILE:="/tmp/mmpv.pid"}"
+: "${MMPV_SESSION:="MMPV"}"
+: "${MMPV_PLAYER:="mpv"}"
+
+# enable job control
+set -m
+
+case "$1" in
+  -a)
+    TMUX='' tmux attach-session -t "$MMPV_SESSION" \; set status off
+    ;;
+  -q)
+    shift
+    tmux kill-session -t "$MMPV_SESSION" 2> /dev/null
+    tmux new-session -d -s "$MMPV_SESSION" "$0" "$@"
+    ;;
+  *)
+    if command -v mpc > /dev/null; then
+      mpc pause > /dev/null
+    fi
+
+    if [ -f "$MMPV_PIDFILE" ]; then
+      pid=$(cat "$MMPV_PIDFILE")
+      cmd="$(ps -p "$pid" -o cmd=)"
+      case "$cmd" in
+        $MMPV_PLAYER*)
+          kill "$pid"
+          ;;
+      esac
+    fi
+    "$MMPV_PLAYER" "$@" &
+    echo $! > "$MMPV_PIDFILE"
+    fg > /dev/null
+    ;;
+esac
