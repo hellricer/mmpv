@@ -18,9 +18,7 @@ case "$1" in
     tmux new-session -d -s "$MMPV_SESSION" "$0" "$@"
     ;;
   *)
-    if command -v mpc > /dev/null; then
-      mpc pause > /dev/null
-    fi
+    mpc pause > /dev/null 2>&1
 
     if [ -f "$MMPV_PIDFILE" ]; then
       pid=$(cat "$MMPV_PIDFILE")
